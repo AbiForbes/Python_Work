@@ -2,8 +2,11 @@
 # All functions should be pure i.e. no i/o, no global vars etc.
 
 from collections import namedtuple
+from tic_tac_toe_move_exception import SpaceAlreadyUsedError, InputNotInCorrectForm
 
 class Board:
+
+    __slots__ = ('top_left', 'top_centre', 'top_right', 'middle_left', 'centre', 'middle_right', 'bottom_left','bottom_centre', 'bottom_right')
 
     def __init__(self):
         self.top_left = ' '
@@ -90,10 +93,11 @@ def Update_Gamestate(Current_Gamestate, chosen_space):
 
 def initalise_game():
     Current_Gamestate = Gamestate()
+    Spaces_Used = []
     print(f"\nPlayer One is Crosses (X) and Player Two is Noughts (0)\n")
     print(Current_Gamestate.Gameboard)
     print(f'Next marker: {Current_Gamestate.XOr0}')
-    return Current_Gamestate
+    return Current_Gamestate, Spaces_Used
 
 def change_board(Current_Gamestate, chosen_space):
     Current_Gamestate = Update_Gamestate(Current_Gamestate, chosen_space)
@@ -103,41 +107,33 @@ def change_board(Current_Gamestate, chosen_space):
     print(f'Next marker: {Current_Gamestate.XOr0}')
     return Current_Gamestate
 
+def gameOver(Current_Gamestate):
+    if Current_Gamestate.Gameboard.isBoardWinning() or Current_Gamestate.Gameboard.isBoardaDraw():
+        return True
+    return False
 
-def main():
-    Current_Gamestate = initalise_game()
-    chosen_space = 'top_right'
+def gameContinue(Current_Gamestate, Spaces_Used):
+    chosen_space = input("Input space: ").lower() #########################no i/o
+    if chosen_space in Spaces_Used:
+        print(SpaceAlreadyUsedError(f'\nThis space has already been scribled in! Try another space!'))
+        return Current_Gamestate, Spaces_Used
     Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    chosen_space = 'top_left'
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    chosen_space = 'bottom_right'
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    chosen_space = 'bottom_left'
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    chosen_space = 'bottom_centre'
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    chosen_space = 'top_centre'
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    chosen_space = 'centre'
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    chosen_space = 'middle_right'
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    chosen_space = 'middle_left'
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-
-    
+    Spaces_Used.append(chosen_space)
+    return Current_Gamestate, Spaces_Used
 
 
 if __name__ == '__main__':
 
-    main()
+    Current_Gamestate, Spaces_Used = initalise_game()
+
+    while not gameOver(Current_Gamestate):
+        try:
+            gameContinue(Current_Gamestate, Spaces_Used)
+        except AttributeError as e:
+            print(f'\n{e}')
+            print(InputNotInCorrectForm(f"Input must be in one of the following forms:\n'top_left', 'top_centre', 'top_right', 'middle_left', 'centre', 'middle_right', 'bottom_left','bottom_centre', 'bottom_right'"))
+    
+    print("\n GAME OVER")
+
     
 
