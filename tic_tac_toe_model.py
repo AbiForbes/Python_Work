@@ -6,15 +6,15 @@ from collections import namedtuple
 class Board:
 
     def __init__(self):
-        self.top_left = '-'
-        self.top_centre = '-'
-        self.top_right = '-'
-        self.middle_left = '-'
-        self.centre = '-'
-        self.middle_right = '-'
-        self.bottom_left = '-'
-        self.bottom_centre = '-'
-        self.bottom_right = '-'
+        self.top_left = ' '
+        self.top_centre = ' '
+        self.top_right = ' '
+        self.middle_left = ' '
+        self.centre = ' '
+        self.middle_right = ' '
+        self.bottom_left = ' '
+        self.bottom_centre = ' '
+        self.bottom_right = ' '
 
     def changeBoard(self, attribute_to_change, piece):
         setattr(self, attribute_to_change, piece)
@@ -44,7 +44,7 @@ class Board:
 
     def isBoardFull(self):
         listofBoardspaces = [self.top_left, self.top_centre, self.top_right, self.middle_left, self.centre, self.middle_right, self.bottom_left, self.bottom_centre, self.bottom_right]
-        if '-' in listofBoardspaces:
+        if ' ' in listofBoardspaces:
             return False
         return True
 
@@ -54,7 +54,7 @@ class Board:
         return True
 
     def __str__(self):
-        return f'\nGamestate: \n \n {self.top_left} {self.top_centre} {self.top_right} \n {self.middle_left} {self.centre} {self.middle_right} \n {self.bottom_left} {self.bottom_centre} {self.bottom_right} \n'
+        return f'\nGamestate: \n \n {self.top_left} | {self.top_centre} | {self.top_right} \n-----------\n {self.middle_left} | {self.centre} | {self.middle_right} \n-----------\n {self.bottom_left} | {self.bottom_centre} | {self.bottom_right} \n'
 
 class Xor0:
 
