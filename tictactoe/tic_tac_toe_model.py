@@ -2,7 +2,7 @@
 # All functions should be pure i.e. no i/o, no global vars etc.
 
 from collections import namedtuple
-from tic_tac_toe_move_exception import SpaceAlreadyUsedError, InputNotInCorrectForm
+from tic_tac_toe_file_save import *
 
 class Board:
 
@@ -19,11 +19,15 @@ class Board:
         self.bottom_centre = ' '
         self.bottom_right = ' '
 
+    def __dict__(self):
+        dictionary = {"top_left" : self.top_left, "top_centre" : self.top_centre, "top_right" : self.top_right, "middle_left" : self.middle_left, "centre" : self.centre, "middle_right" : self.middle_right, "bottom_left" : self.bottom_left, "bottom_centre" : self.bottom_centre, "bottom_right" : self.bottom_right}
+        return dictionary
+
     def changeBoard(self, attribute_to_change, piece):
         setattr(self, attribute_to_change, piece)
 
     def isBoardWinning(self):
-        valid_pieces = ('X', '0')
+        valid_pieces = ('❌', '⭕️')
         if self.centre in valid_pieces:
             if self.middle_left == self.centre == self.middle_right:
                 return True
@@ -62,19 +66,20 @@ class Board:
 class Xor0:
 
     def __init__(self):
-        self.piece = 'X'
+        self.piece = '❌'
 
     def changemarker(self):
-        if self.piece == 'X':
-            setattr(self, 'piece', '0')
+        if self.piece == '❌':
+            setattr(self, 'piece', '⭕️')
         else:
-            setattr(self, 'piece', 'X')
+            setattr(self, 'piece', '❌')
     
     def __str__(self):
         return self.piece
 
 def Gamestate():
     Gamestate = namedtuple('Gamestate', ['XOr0', 'Gameboard'])
+
     piece = Xor0()
     board = Board()
     Current_Gamestate = Gamestate(piece, board)
@@ -91,49 +96,75 @@ def Update_Gamestate(Current_Gamestate, chosen_space):
     Current_Gamestate = Current_Gamestate._replace(XOr0 = piece)
     return Current_Gamestate
 
+def initialise_new_game(Current_Gamestate, Spaces_Used, NoughtorCross):
+    NoughtorCross = str(input('Would you like noughts or crosses? 0/X\n').upper().strip())
+    if NoughtorCross == 'O':
+        NoughtorCross = '0'
+
+    if NoughtorCross == '0':
+        NoughtorCross = '⭕️'
+        piece = Current_Gamestate.XOr0
+        piece.changemarker()
+        Current_Gamestate = Current_Gamestate._replace(XOr0 = piece)
+        print(Current_Gamestate.Gameboard)
+        print(f"\nPlayer One is Noughts (⭕️) and Player Two is Crosses (❌)\n")
+        return Current_Gamestate, Spaces_Used, NoughtorCross
+
+    elif NoughtorCross == 'X':
+        NoughtorCross = '❌'
+        print(f"\nPlayer One is Crosses (❌) and Player Two is Noughts (⭕️)\n")
+        print(Current_Gamestate.Gameboard)
+        return Current_Gamestate, Spaces_Used, NoughtorCross
+
+    else:
+        print(f'Please enter ONLY a nought or a cross')
+        Current_Gamestate, Spaces_Used, NoughtorCross = initalise_game()
+        return Current_Gamestate, Spaces_Used, NoughtorCross
+
+def shallWePickUpTheSaveFile(Current_Gamestate, Spaces_Used, NoughtorCross):
+    newGameOrNot = input("Do you want to pick up your saved game? Y/N\n").upper()
+
+    if newGameOrNot == 'Y':
+        Current_Gamestate, Spaces_Used, NoughtorCross = callFileBack(Current_Gamestate, Spaces_Used, NoughtorCross)
+        print(Current_Gamestate.Gameboard)
+        return Current_Gamestate, Spaces_Used, NoughtorCross
+    elif newGameOrNot == 'N':
+        Current_Gamestate, Spaces_Used, NoughtorCross = initialise_new_game(Current_Gamestate, Spaces_Used, NoughtorCross)
+        print(Current_Gamestate.Gameboard)
+        return Current_Gamestate, Spaces_Used, NoughtorCross
+    else:
+        shallWePickUpTheSaveFile(Current_Gamestate, Spaces_Used, NoughtorCross)
+
+
 def initalise_game():
     Current_Gamestate = Gamestate()
     Spaces_Used = []
-    print(f"\nPlayer One is Crosses (X) and Player Two is Noughts (0)\n")
-    print(Current_Gamestate.Gameboard)
-    print(f'Next marker: {Current_Gamestate.XOr0}')
-    return Current_Gamestate, Spaces_Used
+    NoughtorCross = ''
+    filename = "saved_game.txt"
+    gameboardfile = "gameboard.json"
+    f = None
+    j = None
+    try:
+        f = open(filename, 'r')
+        j = open(gameboardfile, 'r')
+    except FileNotFoundError:
+        Current_Gamestate, Spaces_Used, NoughtorCross = initialise_new_game(Current_Gamestate, Spaces_Used, NoughtorCross)
+    else:
+        f.close()
+        j.close()
+        Current_Gamestate, Spaces_Used, NoughtorCross = shallWePickUpTheSaveFile(Current_Gamestate, Spaces_Used, NoughtorCross)
+
+    return Current_Gamestate, Spaces_Used, NoughtorCross
+
 
 def change_board(Current_Gamestate, chosen_space):
     Current_Gamestate = Update_Gamestate(Current_Gamestate, chosen_space)
     print(Current_Gamestate.Gameboard)
-    print(f'Is this a winning gameboard: {Current_Gamestate.Gameboard.isBoardWinning()}')
-    print(f'Is board a draw: {Current_Gamestate.Gameboard.isBoardaDraw()}')
-    print(f'Next marker: {Current_Gamestate.XOr0}')
     return Current_Gamestate
 
-def gameOver(Current_Gamestate):
-    if Current_Gamestate.Gameboard.isBoardWinning() or Current_Gamestate.Gameboard.isBoardaDraw():
-        return True
-    return False
-
-def gameContinue(Current_Gamestate, Spaces_Used):
-    chosen_space = input("Input space: ").lower() #########################no i/o
-    if chosen_space in Spaces_Used:
-        print(SpaceAlreadyUsedError(f'\nThis space has already been scribled in! Try another space!'))
-        return Current_Gamestate, Spaces_Used
-    Current_Gamestate = change_board(Current_Gamestate, chosen_space)
-    Spaces_Used.append(chosen_space)
-    return Current_Gamestate, Spaces_Used
-
-
-if __name__ == '__main__':
-
-    Current_Gamestate, Spaces_Used = initalise_game()
-
-    while not gameOver(Current_Gamestate):
-        try:
-            gameContinue(Current_Gamestate, Spaces_Used)
-        except AttributeError as e:
-            print(f'\n{e}')
-            print(InputNotInCorrectForm(f"Input must be in one of the following forms:\n'top_left', 'top_centre', 'top_right', 'middle_left', 'centre', 'middle_right', 'bottom_left','bottom_centre', 'bottom_right'"))
-    
-    print("\n GAME OVER")
-
-    
+def player_number(Current_Gamestate, NoughtorCross):
+    if Current_Gamestate.XOr0.piece == NoughtorCross:
+        return 1
+    else:
+        return 2
 
